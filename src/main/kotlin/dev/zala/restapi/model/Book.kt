@@ -10,10 +10,12 @@ data class Book(
     val id: Long,
     val title: String,
     val author: String,
-    val isbn: String? = null,       // optional; not every book has ISBN
-    val year: Int? = null,          // publication year
+    val description: String? = null,  // short description or review
+    val rating: Int? = null,          // 1–5 stars (optional)
+    val isbn: String? = null,         // optional; not every book has ISBN
+    val year: Int? = null,            // publication year
     val status: BookStatus = BookStatus.ON_SHELF,
-    val lentTo: String? = null     // who has it when status is LENT_OUT
+    val lentTo: String? = null        // who has it when status is LENT_OUT
 )
 
 /**

@@ -22,8 +22,8 @@ import org.springframework.web.bind.annotation.*
 class BookController {
 
     private val books = mutableListOf(
-        Book(1L, "The Hobbit", "J.R.R. Tolkien", "978-0547928227", 1937, BookStatus.ON_SHELF, null),
-        Book(2L, "Clean Code", "Robert C. Martin", "978-0132350884", 2008, BookStatus.LENT_OUT, "Alice")
+        Book(1L, "The Hobbit", "J.R.R. Tolkien", "A fantasy classic about Bilbo Baggins and his unexpected journey.", 5, "978-0547928227", 1937, BookStatus.ON_SHELF, null),
+        Book(2L, "Clean Code", "Robert C. Martin", "Practical guide to writing readable and maintainable code.", 4, "978-0132350884", 2008, BookStatus.LENT_OUT, "Alice")
     )
 
     // ---------- CRUD (Create, Read, Update, Delete) ----------
@@ -65,6 +65,8 @@ class BookController {
             id = newId,
             title = req.title,
             author = req.author,
+            description = req.description,
+            rating = req.rating,
             isbn = req.isbn,
             year = req.year,
             status = BookStatus.ON_SHELF,
@@ -85,6 +87,8 @@ class BookController {
         val updated = books[index].copy(
             title = req.title,
             author = req.author,
+            description = req.description,
+            rating = req.rating,
             isbn = req.isbn,
             year = req.year
         )
@@ -142,6 +146,8 @@ class BookController {
     data class CreateBookRequest(
         val title: String,
         val author: String,
+        val description: String? = null,
+        val rating: Int? = null,  // 1–5
         val isbn: String? = null,
         val year: Int? = null
     )
@@ -149,6 +155,8 @@ class BookController {
     data class UpdateBookRequest(
         val title: String,
         val author: String,
+        val description: String? = null,
+        val rating: Int? = null,  // 1–5
         val isbn: String? = null,
         val year: Int? = null
     )
