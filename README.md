@@ -4,11 +4,9 @@ A minimal REST API built with **Kotlin** and **Spring Boot** to learn the basics
 
 ## What's in this project
 
-- **REST controller** at `/api/items` with:
-  - `GET /api/items` — list all items
-  - `GET /api/items/{id}` — get one item
-  - `POST /api/items` — create an item (JSON body)
-  - `DELETE /api/items/{id}` — delete an item
+- **Sample API** at `/api/items` — simple CRUD to learn the basics.
+- **Home library API** at `/api/books` — manage books, lend/return, filter by author or status.  
+  See **[docs/HOME_LIBRARY_API.md](docs/HOME_LIBRARY_API.md)** for the design and how to try it.
 - In-memory storage (no database); data resets when you restart the app.
 - JSON request/response via Jackson (Kotlin data classes).
 
@@ -55,9 +53,13 @@ The API will be available at **http://localhost:8080**.
 src/main/kotlin/dev/zala/restapi/
 ├── RestApiApplication.kt      # Spring Boot entry point
 ├── controller/
-│   └── ItemController.kt      # REST endpoints
+│   ├── ItemController.kt      # Simple CRUD demo
+│   └── BookController.kt      # Home library API
 └── model/
-    └── Item.kt                # Data class for items
+    ├── Item.kt
+    └── Book.kt                # Book + BookStatus for library
+docs/
+└── HOME_LIBRARY_API.md        # How the library API is designed
 ```
 
 ## Next steps
