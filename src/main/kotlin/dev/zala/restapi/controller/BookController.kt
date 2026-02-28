@@ -3,6 +3,7 @@ package dev.zala.restapi.controller
 import dev.zala.restapi.model.Book
 import dev.zala.restapi.model.BookRating
 import dev.zala.restapi.model.BookStatus
+import dev.zala.restapi.model.ReadingStatus
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -23,8 +24,10 @@ import org.springframework.web.bind.annotation.*
 class BookController {
 
     private val books = mutableListOf(
-        Book(1L, "The Hobbit", "J.R.R. Tolkien", "A fantasy classic about Bilbo Baggins and his unexpected journey.", "5", "978-0547928227", 1937, BookStatus.ON_SHELF, null),
-        Book(2L, "Clean Code", "Robert C. Martin", "Practical guide to writing readable and maintainable code.", "4.5", "978-0132350884", 2008, BookStatus.LENT_OUT, "Alice")
+        Book(1L, "The Hobbit", "J.R.R. Tolkien", "A fantasy classic about Bilbo Baggins and his unexpected journey.", "5", ReadingStatus.READ, "978-0547928227", 1937, BookStatus.ON_SHELF, null),
+        Book(2L, "Clean Code", "Robert C. Martin", "Practical guide to writing readable and maintainable code.", "4.5", ReadingStatus.READ, "978-0132350884", 2008, BookStatus.LENT_OUT, "Alice"),
+        Book(3L, "Dune", "Frank Herbert", null, null, ReadingStatus.WANT_TO_READ_OWN, "978-0441172719", 1965, BookStatus.ON_SHELF, null),
+        Book(4L, "Project Hail Mary", "Andy Weir", null, null, ReadingStatus.CURRENTLY_READING, null, 2021, BookStatus.ON_SHELF, null)
     )
 
     // ---------- CRUD (Create, Read, Update, Delete) ----------
@@ -36,11 +39,13 @@ class BookController {
     @GetMapping
     fun list(
         @RequestParam(required = false) author: String? = null,
-        @RequestParam(required = false) status: BookStatus? = null
+        @RequestParam(required = false) status: BookStatus? = null,
+        @RequestParam(required = false) readingStatus: ReadingStatus? = null
     ): List<Book> {
         var result = books
         if (author != null) result = result.filter { it.author.contains(author, ignoreCase = true) }
         if (status != null) result = result.filter { it.status == status }
+        if (readingStatus != null) result = result.filter { it.readingStatus == readingStatus }
         return result
     }
 
@@ -71,6 +76,7 @@ class BookController {
             author = req.author,
             description = req.description,
             rating = req.rating,
+            readingStatus = req.readingStatus,
             isbn = req.isbn,
             year = req.year,
             status = BookStatus.ON_SHELF,
@@ -96,6 +102,7 @@ class BookController {
             author = req.author,
             description = req.description,
             rating = req.rating,
+            readingStatus = req.readingStatus,
             isbn = req.isbn,
             year = req.year
         )
@@ -153,8 +160,9 @@ class BookController {
     data class CreateBookRequest(
         val title: String,
         val author: String,
+        val readingStatus: ReadingStatus,  // READ, WANT_TO_READ, WANT_TO_READ_OWN, CURRENTLY_READING
         val description: String? = null,
-        val rating: String? = null,  // "DNF" or 1–5 in .25 steps: "1", "1.25", "1.5", ... "5"
+        val rating: String? = null,       // optional; use when readingStatus is READ
         val isbn: String? = null,
         val year: Int? = null
     )
@@ -162,8 +170,9 @@ class BookController {
     data class UpdateBookRequest(
         val title: String,
         val author: String,
+        val readingStatus: ReadingStatus,
         val description: String? = null,
-        val rating: String? = null,  // "DNF" or 1–5 in .25 steps
+        val rating: String? = null,
         val isbn: String? = null,
         val year: Int? = null
     )

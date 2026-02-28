@@ -27,9 +27,10 @@ The **path** is the noun (book/books), the **HTTP method** is the verb (GET, POS
 A book in your home library has:
 
 - Identity: `id`
-- Core info: `title`, `author`, optional `isbn`, `year`
-- State: is it on the shelf or lent out? → `status` (e.g. `ON_SHELF`, `LENT_OUT`)
-- When lent: who has it? → `lentTo`
+- Core info: `title`, `author`, optional `isbn`, `year`, `description`
+- **Reading status:** `READ`, `WANT_TO_READ`, `WANT_TO_READ_OWN` (wish list), `CURRENTLY_READING`
+- **Rating:** when `readingStatus` is `READ`, optional DNF or 1–5 in .25 steps
+- Physical state: `status` (`ON_SHELF`, `LENT_OUT`), `lentTo` when lent
 
 That’s the **domain model** (see `model/Book.kt`). The API sends and receives JSON that matches this model.
 
@@ -59,9 +60,10 @@ Listing *all* books is `GET /api/books`. To support filtering:
 
 - `GET /api/books?author=Tolkien` — books by author containing “Tolkien”
 - `GET /api/books?status=LENT_OUT` — only lent-out books
-- Combine: `GET /api/books?author=Martin&status=ON_SHELF`
+- `GET /api/books?readingStatus=CURRENTLY_READING` — only books you’re reading
+- Combine: `GET /api/books?author=Martin&readingStatus=READ`
 
-The controller reads `@RequestParam(required = false) author` and `status` and filters the list accordingly.
+The controller reads `@RequestParam(required = false) author`, `status`, and `readingStatus` and filters accordingly.
 
 ---
 
@@ -102,18 +104,24 @@ curl "http://localhost:8080/api/books?status=LENT_OUT"
 curl http://localhost:8080/api/books/1
 ```
 
-**Add a book**
+**Add a book** (include `readingStatus`: READ, WANT_TO_READ, WANT_TO_READ_OWN, CURRENTLY_READING)
 ```bash
+# Add as "read" with rating
 curl -X POST http://localhost:8080/api/books \
   -H "Content-Type: application/json" \
-  -d '{"title":"Dune","author":"Frank Herbert","isbn":"978-0441172719","year":1965}'
+  -d '{"title":"Dune","author":"Frank Herbert","readingStatus":"READ","rating":"4.5","isbn":"978-0441172719","year":1965}'
+
+# Add to wish list (want to read + own)
+curl -X POST http://localhost:8080/api/books \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Project Hail Mary","author":"Andy Weir","readingStatus":"WANT_TO_READ_OWN","year":2021}'
 ```
 
 **Update a book**
 ```bash
 curl -X PUT http://localhost:8080/api/books/1 \
   -H "Content-Type: application/json" \
-  -d '{"title":"The Hobbit","author":"J.R.R. Tolkien","isbn":"978-0547928227","year":1937}'
+  -d '{"title":"The Hobbit","author":"J.R.R. Tolkien","readingStatus":"READ","rating":"5","isbn":"978-0547928227","year":1937}'
 ```
 
 **Lend a book**

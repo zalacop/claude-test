@@ -10,13 +10,24 @@ data class Book(
     val id: Long,
     val title: String,
     val author: String,
-    val description: String? = null,  // short description or review
-    val rating: String? = null,      // DNF, or 1–5 in .25 steps: "1", "1.25", "1.5", "1.75", "2", ... "5"
-    val isbn: String? = null,        // optional; not every book has ISBN
-    val year: Int? = null,          // publication year
+    val description: String? = null,       // short description or review
+    val rating: String? = null,           // DNF, or 1–5 in .25 steps (used when readingStatus is READ)
+    val readingStatus: ReadingStatus,     // where the book is in your reading journey
+    val isbn: String? = null,
+    val year: Int? = null,
     val status: BookStatus = BookStatus.ON_SHELF,
-    val lentTo: String? = null       // who has it when status is LENT_OUT
+    val lentTo: String? = null
 )
+
+/**
+ * Where a book is in your reading journey.
+ */
+enum class ReadingStatus {
+    READ,              // finished; typically has a rating
+    WANT_TO_READ,      // want to read (may or may not own)
+    WANT_TO_READ_OWN,  // own it, want to read (wish list)
+    CURRENTLY_READING  // in progress
+}
 
 /**
  * Valid rating values (in order):
@@ -37,9 +48,9 @@ object BookRating {
 }
 
 /**
- * Simple state for a book. Keeps the domain logic clear.
+ * Physical location of the book (shelf vs lent out).
  */
 enum class BookStatus {
-    ON_SHELF,   // available at home
-    LENT_OUT    // someone borrowed it
+    ON_SHELF,
+    LENT_OUT
 }
