@@ -1,6 +1,7 @@
 package dev.zala.restapi.controller
 
 import dev.zala.restapi.model.Book
+import dev.zala.restapi.model.BookRating
 import dev.zala.restapi.model.BookStatus
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -22,8 +23,8 @@ import org.springframework.web.bind.annotation.*
 class BookController {
 
     private val books = mutableListOf(
-        Book(1L, "The Hobbit", "J.R.R. Tolkien", "A fantasy classic about Bilbo Baggins and his unexpected journey.", 5, "978-0547928227", 1937, BookStatus.ON_SHELF, null),
-        Book(2L, "Clean Code", "Robert C. Martin", "Practical guide to writing readable and maintainable code.", 4, "978-0132350884", 2008, BookStatus.LENT_OUT, "Alice")
+        Book(1L, "The Hobbit", "J.R.R. Tolkien", "A fantasy classic about Bilbo Baggins and his unexpected journey.", "5", "978-0547928227", 1937, BookStatus.ON_SHELF, null),
+        Book(2L, "Clean Code", "Robert C. Martin", "Practical guide to writing readable and maintainable code.", "4.5", "978-0132350884", 2008, BookStatus.LENT_OUT, "Alice")
     )
 
     // ---------- CRUD (Create, Read, Update, Delete) ----------
@@ -59,7 +60,10 @@ class BookController {
      * Add a new book. Client sends JSON body; we assign id and default status.
      */
     @PostMapping
-    fun create(@RequestBody req: CreateBookRequest): Book {
+    fun create(@RequestBody req: CreateBookRequest): ResponseEntity<Any> {
+        if (!BookRating.isValid(req.rating)) {
+            return ResponseEntity.badRequest().body(mapOf("error" to "Invalid rating. Use DNF, or 1–5 in .25 steps (e.g. 4.5, 3.25)"))
+        }
         val newId = (books.maxOfOrNull { it.id } ?: 0L) + 1
         val book = Book(
             id = newId,
@@ -73,7 +77,7 @@ class BookController {
             lentTo = null
         )
         books.add(book)
-        return book
+        return ResponseEntity.ok(book)
     }
 
     /**
@@ -81,7 +85,10 @@ class BookController {
      * Update a book (full replace of editable fields). For a real app you might use PATCH for partial updates.
      */
     @PutMapping("/{id}")
-    fun update(@PathVariable id: Long, @RequestBody req: UpdateBookRequest): ResponseEntity<Book> {
+    fun update(@PathVariable id: Long, @RequestBody req: UpdateBookRequest): ResponseEntity<Any> {
+        if (!BookRating.isValid(req.rating)) {
+            return ResponseEntity.badRequest().body(mapOf("error" to "Invalid rating. Use DNF, or 1–5 in .25 steps (e.g. 4.5, 3.25)"))
+        }
         val index = books.indexOfFirst { it.id == id }
         if (index < 0) return ResponseEntity.notFound().build()
         val updated = books[index].copy(
@@ -147,7 +154,7 @@ class BookController {
         val title: String,
         val author: String,
         val description: String? = null,
-        val rating: Int? = null,  // 1–5
+        val rating: String? = null,  // "DNF" or 1–5 in .25 steps: "1", "1.25", "1.5", ... "5"
         val isbn: String? = null,
         val year: Int? = null
     )
@@ -156,7 +163,7 @@ class BookController {
         val title: String,
         val author: String,
         val description: String? = null,
-        val rating: Int? = null,  // 1–5
+        val rating: String? = null,  // "DNF" or 1–5 in .25 steps
         val isbn: String? = null,
         val year: Int? = null
     )
