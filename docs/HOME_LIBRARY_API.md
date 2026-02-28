@@ -29,7 +29,8 @@ A book in your home library has:
 - Identity: `id`
 - Core info: `title`, `author`, optional `isbn`, `year`, `description`
 - **Reading status:** `READ`, `WANT_TO_READ`, `WANT_TO_READ_OWN` (wish list), `CURRENTLY_READING`
-- **Rating:** when `readingStatus` is `READ`, optional DNF or 1–5 in .25 steps
+- **Rating:** when `readingStatus` is `READ`, optional simple rating (DNF or 1–5 in .25 steps)
+- **Detailed rating:** optional in-depth ratings: character, plot, writing, worldBuilding, enjoyment (each 1–10 in .25 steps), plus comment. When present, `calculatedStars` (1–5) is computed from the average.
 - Physical state: `status` (`ON_SHELF`, `LENT_OUT`), `lentTo` when lent
 
 That’s the **domain model** (see `model/Book.kt`). The API sends and receives JSON that matches this model.
@@ -115,6 +116,11 @@ curl -X POST http://localhost:8080/api/books \
 curl -X POST http://localhost:8080/api/books \
   -H "Content-Type: application/json" \
   -d '{"title":"Project Hail Mary","author":"Andy Weir","readingStatus":"WANT_TO_READ_OWN","year":2021}'
+
+# Add with detailed rating (character, plot, writing, worldBuilding, enjoyment: 1–10 each; calculatedStars derived)
+curl -X POST http://localhost:8080/api/books \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Dune","author":"Frank Herbert","readingStatus":"READ","rating":"4.5","detailedRating":{"character":8.5,"plot":9,"writing":8,"worldBuilding":10,"enjoyment":8.5,"comment":"Epic world-building, dense at times."},"year":1965}'
 ```
 
 **Update a book**

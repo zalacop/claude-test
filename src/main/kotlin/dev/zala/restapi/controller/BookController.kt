@@ -3,6 +3,8 @@ package dev.zala.restapi.controller
 import dev.zala.restapi.model.Book
 import dev.zala.restapi.model.BookRating
 import dev.zala.restapi.model.BookStatus
+import dev.zala.restapi.model.DetailedRating
+import dev.zala.restapi.model.DetailedRatingValidator
 import dev.zala.restapi.model.ReadingStatus
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -24,10 +26,22 @@ import org.springframework.web.bind.annotation.*
 class BookController {
 
     private val books = mutableListOf(
-        Book(1L, "The Hobbit", "J.R.R. Tolkien", "A fantasy classic about Bilbo Baggins and his unexpected journey.", "5", ReadingStatus.READ, "978-0547928227", 1937, BookStatus.ON_SHELF, null),
-        Book(2L, "Clean Code", "Robert C. Martin", "Practical guide to writing readable and maintainable code.", "4.5", ReadingStatus.READ, "978-0132350884", 2008, BookStatus.LENT_OUT, "Alice"),
-        Book(3L, "Dune", "Frank Herbert", null, null, ReadingStatus.WANT_TO_READ_OWN, "978-0441172719", 1965, BookStatus.ON_SHELF, null),
-        Book(4L, "Project Hail Mary", "Andy Weir", null, null, ReadingStatus.CURRENTLY_READING, null, 2021, BookStatus.ON_SHELF, null)
+        Book(
+            id = 1L,
+            title = "The Hobbit",
+            author = "J.R.R. Tolkien",
+            description = "A fantasy classic about Bilbo Baggins and his unexpected journey.",
+            rating = "5",
+            detailedRating = DetailedRating(character = 5.0, plot = 5.0, writing = 5.0, worldBuilding = 5.0, enjoyment = 5.0, comment = "Timeless classic."),
+            readingStatus = ReadingStatus.READ,
+            isbn = "978-0547928227",
+            year = 1937,
+            status = BookStatus.ON_SHELF,
+            lentTo = null
+        ),
+        Book(2L, "Clean Code", "Robert C. Martin", "Practical guide to writing readable and maintainable code.", "4.5", null, ReadingStatus.READ, "978-0132350884", 2008, BookStatus.LENT_OUT, "Alice"),
+        Book(3L, "Dune", "Frank Herbert", null, null, null, ReadingStatus.WANT_TO_READ_OWN, "978-0441172719", 1965, BookStatus.ON_SHELF, null),
+        Book(4L, "Project Hail Mary", "Andy Weir", null, null, null, ReadingStatus.CURRENTLY_READING, null, 2021, BookStatus.ON_SHELF, null)
     )
 
     // ---------- CRUD (Create, Read, Update, Delete) ----------
@@ -69,6 +83,11 @@ class BookController {
         if (!BookRating.isValid(req.rating)) {
             return ResponseEntity.badRequest().body(mapOf("error" to "Invalid rating. Use DNF, or 1–5 in .25 steps (e.g. 4.5, 3.25)"))
         }
+        req.detailedRating?.let { dr ->
+            DetailedRatingValidator.validate(dr)?.let { err ->
+                return ResponseEntity.badRequest().body(mapOf("error" to err))
+            }
+        }
         val newId = (books.maxOfOrNull { it.id } ?: 0L) + 1
         val book = Book(
             id = newId,
@@ -76,6 +95,7 @@ class BookController {
             author = req.author,
             description = req.description,
             rating = req.rating,
+            detailedRating = req.detailedRating,
             readingStatus = req.readingStatus,
             isbn = req.isbn,
             year = req.year,
@@ -95,6 +115,11 @@ class BookController {
         if (!BookRating.isValid(req.rating)) {
             return ResponseEntity.badRequest().body(mapOf("error" to "Invalid rating. Use DNF, or 1–5 in .25 steps (e.g. 4.5, 3.25)"))
         }
+        req.detailedRating?.let { dr ->
+            DetailedRatingValidator.validate(dr)?.let { err ->
+                return ResponseEntity.badRequest().body(mapOf("error" to err))
+            }
+        }
         val index = books.indexOfFirst { it.id == id }
         if (index < 0) return ResponseEntity.notFound().build()
         val updated = books[index].copy(
@@ -102,6 +127,7 @@ class BookController {
             author = req.author,
             description = req.description,
             rating = req.rating,
+            detailedRating = req.detailedRating,
             readingStatus = req.readingStatus,
             isbn = req.isbn,
             year = req.year
@@ -160,9 +186,10 @@ class BookController {
     data class CreateBookRequest(
         val title: String,
         val author: String,
-        val readingStatus: ReadingStatus,  // READ, WANT_TO_READ, WANT_TO_READ_OWN, CURRENTLY_READING
+        val readingStatus: ReadingStatus,
         val description: String? = null,
-        val rating: String? = null,       // optional; use when readingStatus is READ
+        val rating: String? = null,           // simple: DNF or 1–5 in .25 steps
+        val detailedRating: DetailedRating? = null,  // character, plot, writing, worldBuilding, enjoyment (1–10 each), comment
         val isbn: String? = null,
         val year: Int? = null
     )
@@ -173,6 +200,7 @@ class BookController {
         val readingStatus: ReadingStatus,
         val description: String? = null,
         val rating: String? = null,
+        val detailedRating: DetailedRating? = null,
         val isbn: String? = null,
         val year: Int? = null
     )

@@ -11,13 +11,59 @@ data class Book(
     val title: String,
     val author: String,
     val description: String? = null,       // short description or review
-    val rating: String? = null,           // DNF, or 1–5 in .25 steps (used when readingStatus is READ)
-    val readingStatus: ReadingStatus,     // where the book is in your reading journey
+    val rating: String? = null,          // DNF, or 1–5 in .25 steps (simple rating)
+    val detailedRating: DetailedRating? = null,  // in-depth ratings; when present, calculatedStars is derived
+    val readingStatus: ReadingStatus,
     val isbn: String? = null,
     val year: Int? = null,
     val status: BookStatus = BookStatus.ON_SHELF,
     val lentTo: String? = null
-)
+) {
+    /** Overall stars (1–5) calculated from detailedRating when present. Null if no detailed rating. */
+    val calculatedStars: Double?
+        get() = detailedRating?.toStars()
+}
+
+/**
+ * In-depth rating: 1–10 in .25 steps for each category.
+ * Average is computed and translated to 1–5 stars (see calculatedStars on Book).
+ */
+data class DetailedRating(
+    val character: Double? = null,    // characters, development
+    val plot: Double? = null,
+    val writing: Double? = null,
+    val worldBuilding: Double? = null,
+    val enjoyment: Double? = null,
+    val comment: String? = null      // thoughts, what you liked/didn't like
+) {
+    /** Averages the 5 ratings and scales to 1–5 stars, rounded to nearest .25 */
+    fun toStars(): Double? {
+        val values = listOf(character, plot, writing, worldBuilding, enjoyment).filterNotNull()
+        if (values.isEmpty()) return null
+        val avg = values.average()
+        val stars = (avg / 10) * 5  // scale 1–10 → 1–5
+        return kotlin.math.round(stars * 4).toDouble() / 4  // round to nearest .25
+    }
+}
+
+object DetailedRatingValidator {
+    /** Valid: 1–10 in .25 steps (1, 1.25, 1.5, ... 10) */
+    fun isValid(value: Double?): Boolean {
+        if (value == null) return true
+        if (value < 1 || value > 10) return false
+        val steps = (value - 1) * 4
+        return steps == steps.toLong().toDouble()
+    }
+
+    fun validate(r: DetailedRating): String? {
+        if (!isValid(r.character)) return "character must be 1–10 in .25 steps"
+        if (!isValid(r.plot)) return "plot must be 1–10 in .25 steps"
+        if (!isValid(r.writing)) return "writing must be 1–10 in .25 steps"
+        if (!isValid(r.worldBuilding)) return "worldBuilding must be 1–10 in .25 steps"
+        if (!isValid(r.enjoyment)) return "enjoyment must be 1–10 in .25 steps"
+        return null
+    }
+}
 
 /**
  * Where a book is in your reading journey.
